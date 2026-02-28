@@ -56,7 +56,51 @@ async function userRegisterController(req, res) { // userRegisterController func
 
 }
 
+/**
+ * user login controller
+ * POST /api/auth/login
+ */
+
+async function userLoginController(req, res) {
+    const { email, password } = req.body; // request body se email aur password ko destructure kar rahe hai
+    const user = await userModel.findOne({ email }).select('+password'); // database me email ke basis par user ko find kar rahe hai aur password field ko bhi select kar rahe hai
+
+    if(!user) { // agar user exist nahi karta hai to error response bhej rahe hai
+        return res.status(401).json({ // 401 status code ke saath error message bhej rahe hai
+            message: "Invalid email or password", // error message
+            // status: "failed" // status field me "failed" set kar rahe hai
+        })
+    }
+
+    const isValid = await user.comparePassword(password); // user ke password ko compare kar rahe hai
+
+    if(!isValid) { // agar password valid nahi hai to error response bhej rahe hai
+        return res.status(401).json({ // 401 status code ke saath error message bhej rahe hai
+            message: "Invalid email or password", // error message
+        })
+    }
+
+    const token = jwt.sign(
+        { id: user._id},
+         process.env.JWT_SECRET,
+        { expiresIn: '3d'}
+    );
+
+    res.cookie('token', token)
+
+    res.status(200).json({
+        user: {
+            id: user._id,
+            email: user.email,
+            name: user.name
+        },
+        token
+    })
+}
+
+
 module.exports = { // userRegisterController function ko export kar rahe hai taaki use kar sakein
-    userRegisterController
+    userRegisterController,
+    userLoginController
 }
 
