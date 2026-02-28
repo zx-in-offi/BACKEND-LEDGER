@@ -2,6 +2,8 @@ const userModel = require('../models/user.model'); // User model ko import kar r
 
 const jwt = require('jsonwebtoken'); // jsonwebtoken library ko import kar rahe hai token generation ke liye
 
+const emailService = require('../services/email.services'); // email service ko import kar rahe hai registration email bhejne ke liye
+
 /**
  * user register controller
  * POST /api/auth/register
@@ -43,16 +45,18 @@ async function userRegisterController(req, res) { // userRegisterController func
         token // response me token bhi bhej rahe hai
     })
 
+    await emailService.sendRegisterationEmail(user.email, user.name); // registration email bhejne ke liye email service ka function call kar rahe hai
 
-    return res.status(201).json({ // 201 status code ke saath success response bhej rahe hai
-        message: "User registered successfully", // success message
-        status: "success", // status field me "success" set kar rahe hai
-        data: { // data field me user information bhej rahe hai
-            id: user._id, // user id
-            name: user.name, // user name
-            email: user.email // user email
-        }
-    })
+
+    // return res.status(201).json({ // 201 status code ke saath success response bhej rahe hai
+    //     message: "User registered successfully", // success message
+    //     status: "success", // status field me "success" set kar rahe hai
+    //     data: { // data field me user information bhej rahe hai
+    //         id: user._id, // user id
+    //         name: user.name, // user name
+    //         email: user.email // user email
+    //     }
+    // })
 
 }
 
