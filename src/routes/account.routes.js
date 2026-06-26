@@ -15,4 +15,12 @@ const router = express.Router();
  */
 router.post('/', authMiddleware, accountController.createAccountController); // account create karne ke liye authMiddleware ko use kar rahe hai taki sirf authenticated user hi account create kar sake
 
+/**
+ * GET /api/accounts/
+ * Get all accounts of the logged-in users
+ * Protected route
+ */
+
+router.get('/', authMiddleware, accountController.getUsersAccountController);
+
 module.exports = router;
