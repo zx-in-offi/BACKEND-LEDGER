@@ -22,6 +22,12 @@ const userSchema = new mongoose.Schema({ // userSchema ko define kar rahe hai
         required: [true, 'Password is required'], // password field required hai
         minlength: [6, 'Password must be at least 6 characters long'], // password ki minimum length 6 characters honi chahiye
         select: false // password ko query results me include nahi karega by default
+    },
+    systemUser: {
+        type: Boolean, // systemUser ka type boolean hoga
+        default: false, // default value false hoga
+        immutable: true, // systemUser field ko immutable bana rahe hai taki once set ho jaye to change na ho jaye
+        select: false // systemUser ko query results me include nahi karega by default
     }
 
 }, { 

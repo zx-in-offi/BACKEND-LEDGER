@@ -157,8 +157,84 @@ async function createTransaction(req, res) {
     
 }
 
+async function createInitialFundsTransaction(req, res) {
+
+    const { toAccount, amount, idempotencyKey } = req.body; // request body se transaction details ko extract kar rahe hai
+    // what is toAccount ? toAccount is the account id to which the amount will be credited, this account will be system account in this case
+    // is toAccount is bank 
+
+    if(!toAccount || !amount || !idempotencyKey){
+        return res.status(400).json({
+            message: 'toAccount, amount and idempotencyKey are required fields'
+        })
+    }
+
+    const toUserAccount = await accountModel.findOne({
+        _id: toAccount,
+    })
+
+    if(!toUserAccount){
+        return res.status(400).json({
+            message: 'Invalid toAccount'
+        })
+    }
+
+    const fromUserAccount = await accountModel.findOne({
+        // systemUser: true
+        
+        // system user account ko find kar rahe hai jisse amount credit hoga, system user account ka systemUser flag true hoga
+        user: req.user._id // system user account ka user field me admin user ka id hoga, isse ensure kar rahe hai ki sirf admin user hi system account ke through initial funds create kar sake
+    })
+
+    if(!fromUserAccount){
+        return res.status(400).json({
+            message: 'System account not found, please contact support'
+        }) 
+    }
+
+    const session = await mongoose.startSession(); // transaction ke liye session start kar rahe hai
+    session.startTransaction(); // transaction start kar rahe hai
+
+    const transaction = new transactionModel({
+        fromAccount : fromUserAccount._id,
+        toAccount,
+        amount,
+        idempotencyKey,
+        status: 'pending'
+
+    }) // transaction ke liye session pass kar rahe hai taki agar transaction fail ho jaye to rollback ho jaye
+
+    const debitLedgerEntry = await ledgerModel.create([ { // whenever we use session, data is passed as array to create method, so that if any of the entry fails, the whole transaction will be rolled back.
+        account: fromUserAccount._id,
+        type: 'debit',
+        amount,
+        transaction: transaction._id
+    } ], { session }) // ledger entry ke liye session pass kar rahe hai taki agar transaction fail ho jaye to rollback ho jaye
+
+    const creditLedgerEntry = await ledgerModel.create([ {
+        account: toAccount,
+        type: 'credit',
+        amount,
+        transaction: transaction._id
+    } ], { session }) // ledger entry ke liye session pass kar rahe hai taki agar transaction fail ho jaye to rollback ho jaye
+
+    transaction.status = 'completed';
+    await transaction.save({ session })
+
+    await session.commitTransaction(); // transaction commit kar rahe hai
+    session.endSession(); // session end kar rahe hai
+
+    return res.status(201).json({
+        message: 'Initial funds transaction completed successfully',
+        transaction
+    })
+
+
+}
+
 
 
 module.exports = {
-    createTransaction
+    createTransaction,
+    createInitialFundsTransaction
 }
