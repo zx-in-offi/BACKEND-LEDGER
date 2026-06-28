@@ -1,7 +1,7 @@
 const mongoose = require('mongoose'); // mongoose library ko import kar rahe hai
 
 const bcrypt = require('bcryptjs'); // bcrypt library ko import kar rahe hai password hashing ke liye
-const { use } = require('react');
+// const { use } = require('react');
 
 const userSchema = new mongoose.Schema({ // userSchema ko define kar rahe hai
     email:{
