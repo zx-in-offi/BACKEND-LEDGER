@@ -48,7 +48,7 @@ async function sendRegisterationEmail(userEmail, name) {
 }
 
 async function sendTransactionEmail(userEmail, name, amount,toAccount, fromAccount) {
-  const sunject = 'Transaction Successful!';
+  const subject = 'Transaction Successful!';
   const text = `Hi ${name},\n\nYour transaction of $${amount} from account ${fromAccount} to account ${toAccount} was successful!\n\nBest regards,\nThe Team`;
   const html = `<p>Hi ${name},</p><p>Your transaction of $${amount} from account ${fromAccount} to account ${toAccount} was successful!</p><p>Best regards,<br>The Team</p>`;
 
