@@ -100,19 +100,22 @@ async function createTransaction(req, res) {
         })
     }
 
+    let transaction;
+    try{
+
     /**
      * Create transaction
      */
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    const transaction = await transactionModel.create({
+    transaction = (await transactionModel.create([ {
         fromAccount,
         toAccount,
         amount,
         idempotencyKey,
         status: 'pending'
-    })
+    }], { session }) )[ 0 ]
 
     const debitLedgerEntry = await ledgerModel.create([ { // whenever we use session, data is passed using array '[]'
         account: fromAccount,
@@ -121,6 +124,11 @@ async function createTransaction(req, res) {
         transaction: transaction._id
     }] , { session })
 
+    await (() => {
+        return new Promise((resolve) => setTimeout(resolve, 5 * 1000)); // 5 sec delay
+
+    }) ()
+
     const creditLedgerEntry = await ledgerModel.create([{
         account: toAccount,
         type: 'credit',
@@ -128,11 +136,23 @@ async function createTransaction(req, res) {
         transaction: transaction._id
     }] , { session })
 
-    transaction.status = 'completed';
-    await transaction.save({ session })
+    // transaction.status = 'completed';
+    // await transaction.save({ session })
+
+    await transactionModel.findOneAndUpdate(
+        { _id: transaction._id},
+        { status: "completed" },
+        { session }
+    )
 
     await session.commitTransaction();
     session.endSession();
+
+    } catch (error) {
+        return res.status(400).json({
+            message: "transaction is pending, please retry after sometime"
+        })
+    }
 
     /**
      * Send transaction email to both sender and receiver
