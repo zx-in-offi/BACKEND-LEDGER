@@ -21,6 +21,10 @@ const app = express(); // server ka instance crete kar rahe hai
 app.use(express.json()); // JSON request body ko parse karne ke liye middleware use kar rahe hai
 app.use(cookieParser()); // cookie-parser middleware ko use kar rahe hai
 
+app.get('/', (req, res) => {
+    res.send("Ledger Service is up and running")
+})
+
 app.use("/api/auth", authRouter); // auth routes ko /api/auth path par use kar rahe hai
 app.use("/api/accounts", accountRouter); // account routes ko /api/accounts path par use kar rahe hai
 app.use("/api/transactions", transactionRoutes); // transaction routes ko /api/transactions path par use kar rahe hai
