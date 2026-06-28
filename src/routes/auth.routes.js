@@ -9,5 +9,10 @@ router.post('/register', authController.userRegisterController); // POST request
 /* POST /api/auth/login */
 router.post('/login', authController.userLoginController); // POST request ke liye /login route define kar rahe hai aur usme userLoginController function ko use kar rahe hai
 
+/**
+ * POST /api/auth/logout
+ */
+router.post("/logout", authController.userLogoutController);
+
 
 module.exports = router; // router ko export kar rahe hai taaki use kar sakein

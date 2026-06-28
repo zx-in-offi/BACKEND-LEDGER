@@ -1,17 +1,30 @@
 const userModel = require('../models/user.model');
 const jwt = require('jsonwebtoken');
 
+const tokenBlacklistModel = require('../models/blacklist.model');
+
 async function authMiddleware(req, res, next) {
 
-    const token = req.cookies.token || req.headers.authorization?.split(' ')[1]; // token ko cookies se ya headers se extract kar rahe hai
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1]; // token ko cookies se ya headers se extract kar rahe hai
 
     if(!token){
         return res.status(401).json({
-            message: 'Unauthorized, token not found'
+            message: 'Unauthorized, token is missing'
 
         })
-
     }
+
+
+    const isBlacklisted = await tokenBlacklistModel.findOne({ token })
+ 
+    if(isBlacklisted)
+    {
+        return res.status(401).json({
+            message: "Unauthorized access, token is invalid"
+        })
+    }
+
+
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET); // token ko verify kar rahe hai
 
@@ -19,24 +32,35 @@ async function authMiddleware(req, res, next) {
 
         req.user = user; // user ko request object me attach kar rahe hai taki aage ke middleware ya controllers me use kar sake
 
-        next(); // next middleware ya controller ko call kar rahe hai
+        return next(); // next middleware ya controller ko call kar rahe hai
 
     }catch (error) {
         return res.status(401).json({
             message: 'Unauthorized, invalid token'
         })
-    }    
+    }   
 
 }
 
 async function authMiddlewareSystemUser(req, res, next) {
-    const token = req.cookies.token || req.headers.authorization?.split(' ')[1]; // token ko cookies se ya headers se extract kar rahe hai
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[ 1] ; // token ko cookies se ya headers se extract kar rahe hai
 
     if(!token){
         return res.status(401).json({
-            message: 'Unauthorized, token not found'
+            message: 'Unauthorized, token is missing'
         })
     }
+
+
+    const isBlacklisted = tokenBlacklistModel.findOne({ token });
+
+    if(isBlacklisted)
+    {
+        return res.status(401).json({
+            message: "Unauthorized access, token is invalid"
+        })
+    }
+
     try {
         const decoded = jwt.verify(token , process.env.JWT_SECRET); // token ko verify kar rahe hai
 

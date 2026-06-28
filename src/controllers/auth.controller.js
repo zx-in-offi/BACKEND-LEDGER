@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken'); // jsonwebtoken library ko import kar rahe 
 
 const emailService = require('../services/email.services'); // email service ko import kar rahe hai registration email bhejne ke liye
 
+const tokenBlacklistModel = require('../models/blacklist.model');
+
 /**
  * user register controller
  * POST /api/auth/register
@@ -102,9 +104,38 @@ async function userLoginController(req, res) {
     })
 }
 
+/**
+ * - User Logout Controller
+ * - POST /api/auth/logout
+ */
+async function userLogoutController(req, res) {
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[ 1 ]
+
+    if(!token)
+    {
+        return res.status(200).json({
+            message: "User logged out successfully."
+        })
+    }
+
+
+
+    await tokenBlacklistModel.create({
+        token: token
+    })
+
+    res.clearCookie("token")
+
+    res.status(200).json({
+        message: "User logged out successfully"
+    })
+    
+}
+
 
 module.exports = { // userRegisterController function ko export kar rahe hai taaki use kar sakein
     userRegisterController,
-    userLoginController
+    userLoginController,
+    userLogoutController
 }
 
